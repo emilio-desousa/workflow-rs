@@ -1,3 +1,8 @@
+use std::process::Command;
+
+use clap::Parser;
+
+#[derive(Parser)]
 struct PythonScript {
     python_file_path: String,
     python_env_binary_path: String,
@@ -5,17 +10,17 @@ struct PythonScript {
 
 impl PythonScript {
     fn run(&self) {
-        println!(
-            "Running file {} with binary {}!",
-            self.python_file_path, self.python_env_binary_path
-        )
+        let output = Command::new(&self.python_env_binary_path)
+            .arg(&self.python_file_path)
+            .output()
+            .expect("failed to execute process");
+
+        println!("Execution done.");
+        println!("Status code is: \n{}", output.status)
     }
 }
 
 fn main() {
-    let python_script = PythonScript {
-        python_file_path: std::env::args().nth(1).expect("No python file given"),
-        python_env_binary_path: std::env::args().nth(2).expect("No python binary was given"),
-    };
+    let python_script = PythonScript::parse();
     python_script.run()
 }
