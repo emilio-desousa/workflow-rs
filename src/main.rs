@@ -22,9 +22,9 @@ impl PythonScript {
     }
 }
 
-fn main() -> ExitStatus {
+fn main() {
     let python_script = PythonScript::parse();
-    python_script.run()
+    python_script.run();
 }
 
 #[cfg(test)]
