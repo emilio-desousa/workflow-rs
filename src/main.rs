@@ -1,30 +1,50 @@
+use clap::Parser;
+use serde::Deserialize;
+use std::fs;
 use std::process::Command;
 use std::process::ExitStatus;
+#[derive(Debug, Deserialize)]
+struct YamlScript {
+    scripts: Vec<PythonScript>,
+}
+fn read_yaml(path: &str) -> Result<YamlScript, serde_yaml::Error> {
+    let contents = fs::read_to_string(path).expect("Should have been able to read the file");
+    let yaml: YamlScript = serde_yaml::from_str(&contents)?;
+    Ok(yaml)
+}
 
-use clap::Parser;
-
-#[derive(Parser)]
+#[derive(Parser, Debug, Deserialize)]
 struct PythonScript {
-    python_file_path: String,
-    python_env_binary_path: String,
+    script: String,
+    python_binary: String,
 }
 
 impl PythonScript {
     fn run(&self) -> ExitStatus {
-        let output = Command::new(&self.python_env_binary_path)
-            .arg(&self.python_file_path)
+        let output = Command::new(&self.python_binary)
+            .arg(&self.script)
             .output()
             .expect("failed to execute process");
 
-        println!("Execution done.");
-        println!("Status code is: \n{}", output.status);
         output.status
     }
 }
 
-fn main() {
-    let python_script = PythonScript::parse();
-    python_script.run();
+fn main() -> Result<(), serde_yaml::Error> {
+    let tmp = read_yaml("dummy_python_scripts/simple_yaml.yml")?;
+    for script in tmp.scripts.iter() {
+        println!("##########################");
+        let status = script.run();
+        match status.code() {
+            Some(code) => match code {
+                1 => panic!("Python process failed {:#?}", script),
+                0 => println!("Ok good"),
+                _ => println!("Not expected return code"),
+            },
+            None => print!("bla"),
+        }
+    }
+    Ok(())
 }
 
 #[cfg(test)]
@@ -34,8 +54,8 @@ mod tests {
     #[test]
     fn test_python_script_run_success() {
         let python_script = PythonScript {
-            python_file_path: "tests/success.py".to_string(),
-            python_env_binary_path: "/usr/bin/python3".to_string(),
+            script: "tests/success.py".to_string(),
+            python_binary: "/usr/bin/python3".to_string(),
         };
 
         let return_code = python_script.run();
@@ -46,8 +66,8 @@ mod tests {
     #[test]
     fn test_python_script_run_failing() {
         let python_script = PythonScript {
-            python_file_path: "tests/error.py".to_string(),
-            python_env_binary_path: "/usr/bin/python3".to_string(),
+            script: "tests/error.py".to_string(),
+            python_binary: "/usr/bin/python3".to_string(),
         };
 
         let return_code = python_script.run();

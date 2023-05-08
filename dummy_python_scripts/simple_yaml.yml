@@ -1,4 +1,5 @@
 scripts:
+  - script: dummy_python_scripts/error.py
+    executable: dummy_python_scripts/.venv/bin/python
   - script: dummy_python_scripts/hello.py
-    python_exe: dummy_python_scripts/.venv/bin/python
-    name: Simple YAML
+    executable: dummy_python_scripts/.venv/bin/python
