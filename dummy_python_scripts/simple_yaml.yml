@@ -1,0 +1,4 @@
+scripts:
+  - script: dummy_python_scripts/hello.py
+    python_exe: dummy_python_scripts/.venv/bin/python
+    name: Simple YAML
